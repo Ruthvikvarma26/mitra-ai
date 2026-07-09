@@ -4,6 +4,8 @@ from backend.app.models.user import User
 from backend.app.core.security import hash_password, verify_password
 from backend.app.api.routes.auth import router as auth_router
 from backend.app.core.jwt import create_access_token
+from fastapi import Depends
+from backend.app.core.auth import get_current_user
 
 app = FastAPI()
 app.include_router(auth_router)
@@ -54,4 +56,11 @@ def test_token():
     return {
         "access_token": token,
         "token_type": "bearer"
+    }
+@app.get("/profile")
+def get_profile(current_user: User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email,
     }
