@@ -6,7 +6,7 @@ from backend.app.api.routes.auth import router as auth_router
 from backend.app.core.jwt import create_access_token
 from fastapi import Depends
 from backend.app.core.auth import get_current_user
-
+from backend.app.core.auth import require_admin
 app = FastAPI()
 app.include_router(auth_router)
 Base.metadata.create_all(bind=engine)
@@ -63,4 +63,13 @@ def get_profile(current_user: User = Depends(get_current_user)):
         "id": current_user.id,
         "name": current_user.name,
         "email": current_user.email,
+    }
+
+@app.get("/admin")
+def admin_dashboard(
+    current_user: User = Depends(require_admin)
+):
+    return {
+        "message": "Welcome Admin!",
+        "admin": current_user.name
     }
