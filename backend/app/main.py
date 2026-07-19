@@ -7,8 +7,15 @@ from backend.app.core.jwt import create_access_token
 from fastapi import Depends
 from backend.app.core.auth import get_current_user
 from backend.app.core.auth import require_admin
+from backend.app.api.routes.personality import router as personality_router
+from backend.app.models.chat_session import ChatSession
+from backend.app.models.message import Message
+from backend.app.api.routes.chat import router as chat_router
+
 app = FastAPI()
 app.include_router(auth_router)
+app.include_router(personality_router)
+app.include_router(chat_router)
 Base.metadata.create_all(bind=engine)
 
 @app.get("/")
