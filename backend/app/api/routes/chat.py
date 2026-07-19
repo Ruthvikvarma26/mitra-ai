@@ -84,8 +84,10 @@ def get_messages(
 ):
     return get_chat_messages(
         db=db,
-        session_id=session_id
+        session_id=session_id,
+        user_id=current_user.id
     )
+    
 @router.put(
     "/{session_id}/rename",
     response_model=ChatSessionResponse
@@ -97,10 +99,11 @@ def rename_chat(
     current_user: User = Depends(get_current_user)
 ):
     return rename_chat_session(
-        db=db,
-        session_id=session_id,
-        title=data.title,
-    )
+    db=db,
+    session_id=session_id,
+    user_id=current_user.id,
+    title=data.title
+)
 
 @router.delete("/{session_id}")
 def delete_chat(
@@ -109,6 +112,7 @@ def delete_chat(
     current_user: User = Depends(get_current_user)
 ):
     return delete_chat_session(
-        db=db,
-        session_id=session_id
-    )
+    db=db,
+    session_id=session_id,
+    user_id=current_user.id
+)

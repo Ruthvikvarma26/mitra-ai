@@ -50,6 +50,12 @@ def chat_with_personality(
     session_id: int,
     user_message: str
 ):
+    if not user_message.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Message cannot be empty"
+        )
+        
     # Save user's message
     save_message(
         db=db,
@@ -64,16 +70,20 @@ def chat_with_personality(
     ).first()
 
     if not session:
-        raise Exception("Chat session not found")
-
+        raise HTTPException(
+            status_code=404,
+            detail="Chat session not found"
+        )
     # Get personality
     personality = db.query(Personality).filter(
         Personality.id == session.personality_id
     ).first()
 
     if not personality:
-        raise Exception("Personality not found")
-
+        raise HTTPException(
+            status_code=404,
+            detail="Personality not found"
+        )
     # Generate AI reply
     ai_reply = generate_reply(
         personality.system_prompt,
@@ -104,8 +114,24 @@ def get_user_chat_sessions(
 
 def get_chat_messages(
     db: Session,
-    session_id: int
+    session_id: int,
+    user_id: int
 ):
+    session = (
+        db.query(ChatSession)
+        .filter(
+            ChatSession.id == session_id,
+            ChatSession.user_id == user_id
+        )
+        .first()
+    )
+
+    if not session:
+        raise HTTPException(
+            status_code=404,
+            detail="Chat session not found"
+        )
+
     return (
         db.query(Message)
         .filter(Message.session_id == session_id)
@@ -116,16 +142,23 @@ def get_chat_messages(
 def rename_chat_session(
     db: Session,
     session_id: int,
+    user_id: int,
     title: str
 ):
     session = (
         db.query(ChatSession)
-        .filter(ChatSession.id == session_id)
+        .filter(
+            ChatSession.id == session_id,
+            ChatSession.user_id == user_id
+        )
         .first()
     )
 
     if not session:
-        raise Exception("Chat session not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Chat session not found"
+        )
 
     session.title = title
 
@@ -136,11 +169,15 @@ def rename_chat_session(
 
 def delete_chat_session(
     db: Session,
-    session_id: int
+    session_id: int,
+    user_id: int
 ):
     session = (
         db.query(ChatSession)
-        .filter(ChatSession.id == session_id)
+        .filter(
+            ChatSession.id == session_id,
+            ChatSession.user_id == user_id
+        )
         .first()
     )
 
@@ -150,15 +187,14 @@ def delete_chat_session(
             detail="Chat session not found"
         )
 
-    # Delete all messages first
     db.query(Message).filter(
         Message.session_id == session_id
     ).delete()
 
-    # Delete the chat session
     db.delete(session)
     db.commit()
 
     return {
+        "success": True,
         "message": "Chat deleted successfully"
     }
